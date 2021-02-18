@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ochicken.top","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","width":240,"display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="读者的目的是要在VPS上搭建个人博客. 在这篇文章里, 作者假定读者对Linux, shell, IP, 域名以及git等概念是有一定认识的, 但是可能对Linux如何联网没有深入的理解, 并且相关概念以及用词惯例有一定的含混. 我们会从相关概念的区分开始讲起, 然后是选择VPS得到一个布居在云上的Linux主机并以shell登录它, 再然后是搭博客. 搭博客分为三种方式. 一是在GitHub上搭">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to Build a Personal Blog">
+<meta property="og:url" content="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/index.html">
+<meta property="og:site_name" content="OChicken">
+<meta property="og:description" content="读者的目的是要在VPS上搭建个人博客. 在这篇文章里, 作者假定读者对Linux, shell, IP, 域名以及git等概念是有一定认识的, 但是可能对Linux如何联网没有深入的理解, 并且相关概念以及用词惯例有一定的含混. 我们会从相关概念的区分开始讲起, 然后是选择VPS得到一个布居在云上的Linux主机并以shell登录它, 再然后是搭博客. 搭博客分为三种方式. 一是在GitHub上搭">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/DNS.jpg">
+<meta property="og:image" content="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/A_record.png">
+<meta property="article:published_time" content="2019-09-30T21:08:27.000Z">
+<meta property="article:modified_time" content="2021-02-18T02:40:25.307Z">
+<meta property="article:author" content="Shouran Ma">
+<meta property="article:tag" content="VPS">
+<meta property="article:tag" content="服务器">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Personal Blog">
+<meta property="article:tag" content="个人博客">
+<meta property="article:tag" content="GitHub Pages">
+<meta property="article:tag" content="Hexo">
+<meta property="article:tag" content="树莓派">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/DNS.jpg">
+
+<link rel="canonical" href="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>How to Build a Personal Blog | OChicken</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">OChicken</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ochicken.top/2019/09/30/How-to-Build-a-Personal-Blog/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/Cola.png">
+      <meta itemprop="name" content="Shouran Ma">
+      <meta itemprop="description" content="RWTH Physiker <br> 半职业码农">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="OChicken">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          How to Build a Personal Blog
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-09-30 23:08:27" itemprop="dateCreated datePublished" datetime="2019-09-30T23:08:27+02:00">2019-09-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-02-18 03:40:25" itemprop="dateModified" datetime="2021-02-18T03:40:25+01:00">2021-02-18</time>
+              </span>
+
+          
+            <div class="post-description">读者的目的是要在VPS上搭建个人博客. 在这篇文章里, 作者假定读者对Linux, shell, IP, 域名以及git等概念是有一定认识的, 但是可能对Linux如何联网没有深入的理解, 并且相关概念以及用词惯例有一定的含混. 我们会从相关概念的区分开始讲起, 然后是选择VPS得到一个布居在云上的Linux主机并以shell登录它, 再然后是搭博客. 搭博客分为三种方式. 一是在GitHub上搭, 二是在云Linux主机上安装特定的包, 使得您可以直接在Chrome上编辑博客; 三是在云Linux主机上搭建一个git仓库, 使得您可以在本地编辑博客, 然后以类似于git push的方式把本地的内容同步到云Linux. 通过这两种方式您已经可以在浏览器里输入IP地址看到您发布的内容了. 最后, 我们会谈及如何购买域名以及SSL证书使得您的网页可以以user-friendly的方式访问.</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <font size=2>
+
+<h1 id="概念区分"><a href="#概念区分" class="headerlink" title="概念区分"></a>概念区分</h1><p>首先得理解服务器, 一般是Linux系统. 一个最裸的Linux主机是孤立的, 给它安装了<strong>Web网页服务器</strong>之后就可以外网访问这个Linux主机. 关于网页有两个重要的概念:  </p>
+<ul>
+<li><strong>Web网页服务器</strong>可以是Apache2也可以是Nginx, 配置文件都位于<code>/etc/*/sites-available/default</code> (或者类似于<code>default</code>的文件名), 但是这仅仅是默认网页服务器而已, 浏览器点开IP里是Apache2的介绍页, 这个介绍页就位于Linux主机上.  </li>
+<li><strong>网页的内容</strong>都放在<code>/var/www/a_certain_dir</code> (<code>a_certain_dir</code>可以是<code>html</code>也可以是<code>blog</code>等随便一个目录名). 打开浏览器输入IP看到的Apache2的介绍页就是<code>/var/www/html/index.html</code>所控制的. (<code>/var/www/</code>的原生内容就一个<code>./html/</code>文件夹, 里面就一个<code>./html/index.html</code>文件.)  </li>
+</ul>
+<p>网页框架的default文件默认是指向<code>/var/www/html/</code>的. 在云Linux主机上安装特定包并在浏览器上直接写博客的方式尽可不去管<strong>Web网页服务器</strong>的设置, 而是用shell登录后, 直接在<code>/var/www/html/</code>里配置即可, 然后浏览器点开IP就有东西了. 而在本地写好博客然后发布到云Linux机的方式则需要考虑博客的内容是放在<code>/var/www/</code>下的<code>blog/</code>亦或是<code>html/</code>; 若是前者, 则需要设置一下<code>/etc/*/sites-available/default</code>, 让其指向<code>/var/www/blog/</code>.  </p>
+<p>上面是最简化版的搭博客过程. 但是这样的博客很”简单”: 因为访问者只能访问, 而不能作为用户登录这个网页并写comments. 这其实区分了读和写的两个权限, 访问者对网页的”写”过程要反馈到云Linux主机的<code>/var/www/html/</code>中, 这涉及到比较多的权限问题. 在网页搭建的这个圈分别对应于可写和不可写分别对应”静态”和”动态”. 要实现访问者能够”写”网页的目的, 还需要MySQL和PHP, 加上Linux, 合起来就是LAMP或者LNMP — 不少介绍搭博客的博客都说用”宝塔LAMP”搭博客, 就是指这个东西.  </p>
+<p>然后区分域名和IP. 域名是跟IP地址绑定的较易识别的名字, 在浏览器里输入IP来访问网页很不方便因为IP是一串数字, 但是输入形如<code>ochicken.top</code>这样的名字就易记很多, 这就是域名. 可以理解域名为地名, 理解IP地址为蓝球上的地理位置. 地名有可能相同, 但在蓝球上的地理位置显然存在且唯一. 譬如说武汉有个柏林站, 显然不是德意志的柏林.  </p>
+<p>IP往往跟<strong>可被外网访问的云Linux主机</strong>联系在一起, 并以<strong>服务器</strong>指代; <strong>不能被外网访问的本地Linux主机</strong>没有它专属的IP, 也因此不得名服务器. 所谓<strong>外网访问</strong>就是您在浏览器里输入IP所得到的网页是托管在一个Linux主机上的, 这样就说您可以外网访问它. <strong>GitHub</strong>以及<strong>自购的VPS</strong>都是可以外网访问的, 而PC不能被外网访问, 因为PC的联网方式是<strong>PC-&gt;局域网WIFI-&gt;外网</strong>: 局域网一来给PC提供了一个内部IP使得它可以跟外界交互, 使得全世界如此多台的PC都不用独立分配一个IP (否则有限的IPV4会很快被用完), 另一方面也保护了PC不会被外网入侵者通过直接登录的方式随意入侵.<br>其实PC并不是绝对不可以被外网登录的: 像远程登录技术就是很显然的例子. 其实是它设置了<strong>内网穿透</strong>这个功能. 但是我们一般不会拿自己的PC来被外网访问; instead, 作为一个toy model, 会拿<strong>树莓派</strong>作为内网穿透的尝试.<br><strong>GitHub</strong>和<strong>自购VPS</strong>的区别在于, 前者不能通过shell以输入用户名和密码的方式登录, 但是后者可以. 所以GitHub并不是一个足够好玩的toy model.<br><strong>自购VPS &amp; 树莓派</strong>都可以通过shell输入账户密码登录, 进而可以看到Linux的网页相关的配置并可以DIY设置, 所以都是个不错的toy model, 除此之外还能顺便帆樯.  </p>
+<p>总结起来, 可选的服务器有3种, 按配置复杂度从低到高: GitHub, 自购VPS服务器, 树莓派:  </p>
+<ul>
+<li><strong>GitHub服务器</strong>是GitHub自带的, 您只需有一个GitHub账号即可在上面布局博客, 这个优势是显然的; 劣势在于不能被shell登录, 没法看到Linux的网页相关的配置, 所以不是一个很好的练习对象. 实际上, <a target="_blank" rel="noopener" href="https://github.com/OChicken/OChicken.github.io">OChicken/OChicken.github.io</a>里面的内容就相当于<code>/var/www/html/</code>里的内容, 只是GitHub把这些都隐藏起来了.  </li>
+<li>比较有训练价值以及有帆樯的实用价值的是VPS. 我们讲在本文主要讨论它.  </li>
+<li><strong>树莓派</strong>比VPS更难的一处是要摆平内网穿透, 其他的跟VPS没什么不同. 内网穿透的设置具体见<code>RaspberryPi/RaspberryPi_config.md</code>, 本文不涉及内网穿透的配置.  </li>
+</ul>
+<p>如果用GitHub服务器来搭博客的话, 跟它绑定的域名就是<code>OChicken.github.io</code>, 这是GitHub博客要求这样做的; 而用VPS或者树莓派来做的话则需要自行购买一个域名.  </p>
+<p>SSL证书相当于一个网站的”身份证”, 证明这个网站是有一个真实存在的自然人所有的, 因为cyber space上有相当多的一部分网站并不是由自然人所有, 或者说是为不怀好意的黑客所有, 访问这些网站是不安全的. 没有”身份证”也不妨碍您的博客可以被访问, 但现在Chrome已经将没有证书的网站的搜索排序放到偏后的位置了.<br>GitHub本身就自带证书, 因为github/ochicken这个账号的所有者就是一个自然人.  </p>
+<p>重要的概念大概这么多, 接下来进入操作部分, 先从VPS的购买以及用shell登录说起.  </p>
+<h1 id="选择一个VPS并用shell登录"><a href="#选择一个VPS并用shell登录" class="headerlink" title="选择一个VPS并用shell登录"></a>选择一个VPS并用shell登录</h1><p>VPS服务器的选择非常多, Vultr, DO(DigitalOcean), 搬瓦工, Linode, 阿里云, 百度云, … <a target="_blank" rel="noopener" href="https://www.flyzy2005.com/">flyzy小站 - Learning on the way</a>有做相关测评.<br>我用的是DO. 借助GitHub提供的DigitalOcean学生优惠还能褥一波羊毛. 2019年The code is 2019GITHUB50-83f52d0d. 下面这些链接讲述了褥羊毛.<br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/37846718">GitHub提供的DigitalOcean学生优惠 - 知乎</a><br><a target="_blank" rel="noopener" href="https://education.github.com/pack/offers">GitHub Student Developer Pack - GitHub Education</a><br><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/questions/how-to-use-github-promo-code-student-developer-pack">How to use github promo code (student developer pack) | DigitalOcean</a>  </p>
+<p>有了IP之后, 就可以用<code>ssh root@134.209.239.83</code>登录.<br>相对关键的是主机名. 我把它起为<code>OChicken.top</code>. 在<code>.ssh/config</code>添加快捷方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Host OChicken.top</span><br><span class="line">    HostName 134.209.239.83</span><br></pre></td></tr></table></figure>
+<p>登录时用<code>ssh root@OChicken.top</code>即可.<br>开心的话可以把快捷方式起名为全幼儿园最可爱的<code>LovelyBoy</code>. 如果不嫌麻烦, 每次登录都输IP地址<code>134.209.239.83</code>也可以.</p>
+<p>登录服务器后, 显示其主机名是IP地址(比较丑), 也是可以改的: <code>vim /etc/hosts</code>和<code>vim /etc/hostname</code>, 然后<code>reboot</code> (不是restart!) (<a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/questions/how-do-i-change-hostname">How do i change hostname? | DigitalOcean</a>)</p>
+<h1 id="搭博客"><a href="#搭博客" class="headerlink" title="搭博客"></a>搭博客</h1><p>我们会涉及在GitHub以及用VPS(包括自行购买的VPS, 以及树莓派)两类平台上搭建博客的方式.<br>在VPS上搭博客分为两种方式: 一种是在云Linux主机上安装特定的包, 使得您可以直接在Chrome上在线编辑博客; 另一种是在云Linux主机上搭建一个git仓库, 使得您可以在本地编辑博客, 然后以类似于git push的方式把本地的内容同步到云Linux. 通过这两种方式您已经可以在浏览器里输入IP地址看到您发布的内容了.  </p>
+<h2 id="在GitHub上搭博客-by-GitHub-Pages"><a href="#在GitHub上搭博客-by-GitHub-Pages" class="headerlink" title="在GitHub上搭博客: by GitHub Pages"></a>在GitHub上搭博客: by GitHub Pages</h2><p>GitHub Pages上有很多现成的主题, 挑一个, 访问github仓库clone到本仓库OChicken.github.io, 然后直接改<code>index.md</code>, 然后git commit push, 浏览器输入OChicken.github.io, 就会看到带主题的界面. 不过这仅仅是首页, 第一篇Blog还要进一步操作.<br>然而GitHub Pages的主题很不灵活. 你仅仅是能够有一个方便编辑的md文件而已, 另写一篇Blog并在主页上添加Archive等按钮都很不方便. 就GitHub提供的主题来看, 很遗憾, 配置复杂, 文件凌乱.  </p>
+<h2 id="在云Linux主机上安装特定的包在线编辑"><a href="#在云Linux主机上安装特定的包在线编辑" class="headerlink" title="在云Linux主机上安装特定的包在线编辑"></a>在云Linux主机上安装特定的包在线编辑</h2><p>这个所谓的包即是指WordPress或者Drupal. 这种方式尽可不去管<strong>Web网页服务器</strong>的设置, 而是用shell登录后, 直接把包的内容解压到<code>/var/www/html/</code>里, 然后浏览器点开IP就有东西了.<br>如果你想保留<code>html/index.html</code>, 则可以把它重命名为<code>html.old</code>, 而WordPress的包解压出来的内容就放在<code>./html/</code>里. <strong>Web网页服务器</strong>的配置(下一小节会讲)是指向<code>/var/www/html/</code>而不是指向<code>/var/www/html.old/</code>的所以尽可重命名.<br>你会看到无论哪个包, 解压出来的东西都含有<code>index.php</code>或者<code>index.html</code>等类似的文件. 这个文件显然很重要因为它是被网页服务器的配置文件定向指定的, 但里面写的啥并不必关心.  </p>
+<h2 id="本地编辑博客然后同步到云"><a href="#本地编辑博客然后同步到云" class="headerlink" title="本地编辑博客然后同步到云"></a>本地编辑博客然后同步到云</h2><p>这里所谓”同步”是通过git push或者deploy等类似操作. 满足这一需求的博客框架是<a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>.<br>要实现”同步”意味着我们必须在云Linux主机有一个git仓库. <code>github.com/OChicken</code>就是一类天然带了git仓库的VPS (只不过是我们没法shell登录, 也不知道专属的IP是多少), 仓库位于<code>./OChicken.github.io/</code>; 我们自己购买的VPS并不像GitHub那样有git仓库, 所以得自己配置. <strong>在VPS上自建git仓库</strong>来托管本地的代码就是下面的主题; 这一步之后如何用Hexo本地写博客则详见<code>Blog/Hexo.md</code>.  </p>
+<h3 id="远程git仓库"><a href="#远程git仓库" class="headerlink" title="远程git仓库"></a>远程git仓库</h3><p>关键词是「VPS 自建git仓库」. 廖雪峰的<a target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/896043488029600/899998870925664">搭建Git服务器 - 廖雪峰的官方网站</a>写得最简单也最快能够实现. 除此以外还参考过<a target="_blank" rel="noopener" href="https://juejin.im/post/5a2696fcf265da43305e5423">在个人服务器上搭建git服务，创建属于自己的私人仓库 - 掘金</a>. 但是为了实现跟github.com一样的形式以及配置Blog, 是有很多东西要补充的.  </p>
+<h4 id="安装git包并做全局配置"><a href="#安装git包并做全局配置" class="headerlink" title="安装git包并做全局配置"></a>安装git包并做全局配置</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install git</span><br><span class="line">git config --global user.email <span class="string">&quot;Ma.Seoyin@gmail.com&quot;</span></span><br><span class="line">git config --global user.name <span class="string">&quot;OChicken&quot;</span></span><br></pre></td></tr></table></figure>
+<p>配置文件在<code>/root/.gitconfig</code>.</p>
+<h4 id="创建git用户并实现免密登录"><a href="#创建git用户并实现免密登录" class="headerlink" title="创建git用户并实现免密登录"></a>创建git用户并实现免密登录</h4><p>创建git用户于<code>/home/git</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">adduser --home /home/git git</span><br><span class="line"><span class="comment">#密码随意, 记住就好, Full Name []及以下部分都可以忽略</span></span><br><span class="line">chmod 755 /home/git</span><br><span class="line">su git</span><br></pre></td></tr></table></figure>
+<p><strong>Remarks:</strong> 创建了git用户之后, 首先想到的是, 可以从本地以<code>ssh git@DigitalOcean.com</code>输入密码登录吗? 不行, 提示<code>Permission denied (publickey).</code> 解决这个问题, 首先想到可以 <strong>加公钥</strong> 解决, 此外还能以root身份设置git的 <strong>密码登录</strong> (root设置用户以密码登录的方法不在本Blog的讨论范围内).  </p>
+<p>将本地公钥上传到<code>/home/git/.ssh</code>并将公钥加入<code>authorized_keys</code>. 首先, 在服务器端,</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">su git</span><br><span class="line">mkdir .ssh &amp;&amp; chmod 700 .ssh</span><br><span class="line">touch .ssh/authorized_keys &amp;&amp; chmod 600 .ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+<p>回到本地, 把自己的公钥上传,</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scp ~/.ssh/id_rsa.pub root@DigitalOcean.com:/home/git/.ssh</span><br></pre></td></tr></table></figure>
+<p>然后回到服务器,</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/git/.ssh</span><br><span class="line">cat id_rsa.pub &gt;&gt; authorized_keys</span><br></pre></td></tr></table></figure>
+<p>这样, 可以从本地用<code>ssh git@DigitalOcean.com</code>免密登录服务器了.  </p>
+<p><strong>Remarks:</strong> 公钥免密登录的优先级是高于密码登录的. 学院的服务器是root给sm213398设置了密码登录, 所以目录<code>sm213398/.ssh</code>里面并没有任何公钥文件. 后来我给sm213398加上我的公钥, 的确实现了免密登录.</p>
+<h4 id="git用户的权限设置"><a href="#git用户的权限设置" class="headerlink" title="git用户的权限设置"></a>git用户的权限设置</h4><p>在继续本节的讨论之前先问一下:</p>
+<ul>
+<li><p>为什么创建的用户是git而不是ochicken? 对前面的设置的解读是不是有毛病? 是不是应该说, git是用户组, ochicken是用户?</p>
+</li>
+<li><p>所以问题在于, 关于用户和用户组: 如何解读<code>git clone git@github.com:OChicken/OChicken.github.io.git</code>冒号后面一长串? 显然OChicken是我的用户名, 那git是不是GitHub.com服务器的一个用户组呢?</p>
+</li>
+<li><p>就一般的经验来讲, 应该是<code>user1@hostname</code>, <code>user2@hostname</code>. 然而GitHub的为什么是<code>git@hostname:User1/</code>, <code>git@hostname:User2/</code>?</p>
+</li>
+<li><p>看自建git服务器的教程(包括廖雪峰), 都是「创建一个用户git」. 显然, 顺着他们讲的一步一步下来能够实现<code>git clone git@hostname:user1/Project1.git</code>. 然而这都只是对单一用户来讲的. 对多个用户, 如果东西都托管在同一个VPS里, 显然不能创建同名的git. 这不是很奇怪吗?</p>
+</li>
+</ul>
+<p>我觉得合理的解释是, 每在GitHub.com创建一个用户, 相当于在总机上划出一个VPS, 这个VPS是「我」的专属服务器, 每开一个账号就相当于在总机上划出一片VPS区域, 里面自动创建一个<code>用户git</code>, 并在<code>/home/git</code>目录下生成<code>/User1</code>, 声明这个VPS是User1的. 为此,  </p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /home/git/OChicken</span><br></pre></td></tr></table></figure>
+<p>这样传输文件的时候就会写成这样: <code>scp git@DigitalOcean.com:OChicken/file.py ./</code>. 这跟GitHub.com有几乎一样的格式:</p>
+<center>`git@DigitalOcean.com:OChicken/` v.s. `git@github.com:OChicken/`</center>
+
+<p>所以root也是「我」, git也是「我」, IP地址134.209.239.83就是「我」的账号对应的VPS. 因此git需要有跟root一样的sudo权限</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">chmod 740 /etc/sudoers          <span class="comment">#原权限是440</span></span><br><span class="line">vim /etc/sudoers</span><br><span class="line"><span class="comment"># User privilege specification</span></span><br><span class="line">root    ALL=(ALL:ALL) ALL       <span class="comment">#增加楼下一行</span></span><br><span class="line">git     ALL=(ALL:ALL) ALL</span><br><span class="line">chmod 440 /etc/sudoers</span><br></pre></td></tr></table></figure>
+<p>虽然root和git都是「我」, 但是用<code>ssh git@DigitalOcean.com</code>登录服务器并不是我们的目的: git用户只是用来作为版本控制的远端保存的工具, 所以不允许git登录shell:  </p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/passwd</span><br><span class="line">git:x:1000:1000:OChicken,,,:/home/git:/bin/bash           <span class="comment">#改为楼下</span></span><br><span class="line">git:x:1000:1000:OChicken,,,:/home/git:/usr/bin/git-shell</span><br></pre></td></tr></table></figure>
+<p>这里, 我们为<code>git</code>用户指定的<code>git-shell</code>使得每一次尝试登录git, 一登录就自动退出, 换句话收, 这种设置下, <strong>「我」无法以<code>git</code>的身份登录shell</strong>. 可以试试在VPS端执行<code>su git</code>或者本地尝试<code>ssh git@DigitalOcean.com</code>, 一登录就退出.  </p>
+<p>用于传输文件的<code>scp</code>命令也不能用了. 能够实现传输的只剩下<code>git clone</code>.</p>
+<h4 id="在服务器端创建OChicken-DigitalOcean-io的git仓库"><a href="#在服务器端创建OChicken-DigitalOcean-io的git仓库" class="headerlink" title="在服务器端创建OChicken.DigitalOcean.io的git仓库"></a>在服务器端创建OChicken.DigitalOcean.io的git仓库</h4><p>创建一个repository:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/git/OChicken</span><br><span class="line">git init --bare OChicken.DigitalOcean.io.git</span><br></pre></td></tr></table></figure>
+<p>并且把owner改为<code>git</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chown -R git:git OChicken.DigitalOcean.io.git</span><br></pre></td></tr></table></figure>
+<p><strong>Remarks:</strong></p>
+<ol>
+<li><p>但是cd到文件夹<code>OChicken.DigitalOcean.io.git</code>里并ls会看到这么一种画风:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HEAD  branches  config  description  hooks  info  objects  refs</span><br></pre></td></tr></table></figure>
+<p>是不是上面几行的操作有问题? 放心, 没有问题的, 往下走就知道.</p>
+</li>
+<li><p>为什么<code>git init --bare</code>, 要有个<code>--bare</code>参数? 不然一定报错, 理由详见<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/11117823/git-push-error-refusing-to-update-checked-out-branch">Git Push error: refusing to update checked out branch - Stack Overflow</a>, 细节我也不懂 (当时为了要不要这个<code>--bare</code>参数在坑里陷了好久).</p>
+</li>
+</ol>
+<p>回到本地, 测试远程push操作. 先clone,</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> git@DigitalOcean.com:OChicken/OChicken.DigitalOcean.io.git</span><br></pre></td></tr></table></figure>
+<p>(跟<code>git clone git@github.com:OChicken/OChicken.github.io.git</code>长得几乎一样!) clone下来的文件名是<code>OChicken.DigitalOcean.io</code>, 这也是我们熟悉的形式. 接下来尝试做些commits:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;Hello World&quot;</span> &gt; README.md</span><br><span class="line">git add README.md</span><br><span class="line">git commit -m <span class="string">&quot;README.md: 1st commit.&quot;</span></span><br><span class="line">git <span class="built_in">log</span> --pretty=oneline</span><br><span class="line">git push origin master                  <span class="comment">#不要在本条前加git pull origin master</span></span><br></pre></td></tr></table></figure>
+<p>如无意外是能够上传成功的, 说明我们的确成功地建立了一个远程仓库. Yeah!</p>
+<h4 id="服务器端仓库和本地仓库-Remarks"><a href="#服务器端仓库和本地仓库-Remarks" class="headerlink" title="服务器端仓库和本地仓库: Remarks"></a>服务器端仓库和本地仓库: Remarks</h4><p>不同点在于</p>
+<center>  
+
+<table>
+<thead>
+<tr>
+<th align="center">主机</th>
+<th align="left">文件夹名/仓库名</th>
+<th align="left">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">本地端</td>
+<td align="left">Project</td>
+<td align="left">README.md, file1,py, file2.cpp, …</td>
+</tr>
+<tr>
+<td align="center">服务器</td>
+<td align="left">Project.git</td>
+<td align="left">HEAD  branches  config  description  hooks  info  objects  refs</td>
+</tr>
+</tbody></table>
+</center>
+
+<p>无论本地git commit push多少次, 服务器端的<code>Project.git/</code>除了该目录本身大了一点点以外, 并没有看到README.md, file1.py, file2.cpp等文件. 不信的话, 不妨把第一次commit过后的服务器端的<code>Project.git/</code>再clone到本地, 发现README.md的确在本地的<code>Project/</code>里. 这不奇怪. 因为git就是 <strong>代码</strong> 的版本控制系统, 可不管什么文件呢.</p>
+<p>即使服务器端那么的反人类我们也不用太管它什么事, 因为幸运的是clone到本地端就是人话了. 不过也不必太过纠结这个问题, 毕竟它只是个远程仓库, git push就行了.</p>
+<p>相同点是,</p>
+<center>(本地的)Project/.git/contents == (服务器的)Project.git/contents</center>
+且contents就是这几个配置文件和目录: HEAD  branches  config  description  hooks  info  objects  refs, 不会因为我commit过100次而增加内容. 每次commit后, 会发现「本地的Project/.git/」和「服务器的Project.git/」的每个文件可能增加大小, 目录里的子目录的内容会增加, 譬如object/.
+
+<p>在github.com服务器上, 也就是我们常用的网页版UI, 创建一个repository时, GitHub就已经将仓库里的东西「翻译」为人类容易看懂的一个一个的文件. 这个「翻译」并不是什么特别高大上的trick, 看过后面的git hooks配置你会有点想法的.</p>
+<h3 id="网页端Nginx-Let’s-open-to-the-world"><a href="#网页端Nginx-Let’s-open-to-the-world" class="headerlink" title="网页端Nginx: Let’s open to the world"></a>网页端Nginx: Let’s open to the world</h3><h4 id="网页接口文件-var-www-blog"><a href="#网页接口文件-var-www-blog" class="headerlink" title="网页接口文件: /var/www/blog"></a>网页接口文件: <code>/var/www/blog</code></h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /var/www</span><br><span class="line">mkdir blog</span><br><span class="line">chown -R git:git blog</span><br></pre></td></tr></table></figure>
+<h4 id="配置git-hooks-指向-var-www-blog"><a href="#配置git-hooks-指向-var-www-blog" class="headerlink" title="配置git hooks, 指向/var/www/blog"></a>配置git hooks, 指向<code>/var/www/blog</code></h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/git/OChicken/OChicken.DigitalOcean.io.git/hooks</span><br><span class="line">touch post-receive</span><br><span class="line">vim post-receive</span><br></pre></td></tr></table></figure>
+<p>输入如下内容后保存退出.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">GIT_REPO=/home/git/OChicken/OChicken.DigitalOcean.io.git</span><br><span class="line">TMP_GIT_CLONE=/tmp/blog</span><br><span class="line">PUBLIC_WWW=/var/www/blog</span><br><span class="line">rm -rf <span class="variable">$&#123;TMP_GIT_CLONE&#125;</span></span><br><span class="line">rm -rf <span class="variable">$&#123;PUBLIC_WWW&#125;</span>/*</span><br><span class="line">git <span class="built_in">clone</span> <span class="variable">$GIT_REPO</span> <span class="variable">$TMP_GIT_CLONE</span></span><br><span class="line">cp -rf <span class="variable">$&#123;TMP_GIT_CLONE&#125;</span>/* <span class="variable">$&#123;PUBLIC_WWW&#125;</span></span><br></pre></td></tr></table></figure>
+<p>第7行<code>$GIT_REPO</code>是source, <code>$TMP_GIT_CLONE</code>是target. 别忘了修改读取权限和所有者</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 755 post-receive</span><br><span class="line">chown -R git:git post-receive</span><br></pre></td></tr></table></figure>
+<p>再来一次git commit push, 应该能够在<code>/var/www/blog</code>看到non-trivial的内容—你提交的README.md.  </p>
+<p>git hooks的配置无非是在<code>/var/www/blog</code>也同时同步了我们对仓库的修改, 而且这是一个一个分立的文件哦, 没准github.com就是以这种user friendly的方式把文件展示给用户看的.</p>
+<p>但是现在, 服务器也还仅仅是一个孤立的主机, <code>/var/www/blog</code>是有跟外界进行交互的potential, 但要真的做到跟外界交互, 还要再进一步.  </p>
+<h4 id="安装和配置Nginx"><a href="#安装和配置Nginx" class="headerlink" title="安装和配置Nginx"></a>安装和配置Nginx</h4><p>在本博客里, 需要修改的仅仅是<code>/etc/nginx/sites-available/default</code>这个文件而已, 不排除修改别的配置文件也能实现目标, 但不在讨论范围.<br>这一步主要是参考<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b926ecf1c6f6">Hexo搭建个人博客并使用Git部署到VPS - 简书</a>「安装配置nginx」一节. 此外才参考了:<br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000016106584">VPS搭建个人Hexo博客 - - SegmentFault 思否</a><br><a target="_blank" rel="noopener" href="https://tiktoking.github.io/2016/01/26/hexo/">在VPS上搭建hexo博客，利用git更新 | WikiLibrary</a><br>安装Node.js和Nginx. 安装目录在<code>/etc/nginx</code>.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /etc/nginx/sites-available</span><br><span class="line">cp default blog</span><br></pre></td></tr></table></figure>
+<p><code>vim blog</code>修改代码:</p>
+<h5 id="监听80端口-not-secure-so-far"><a href="#监听80端口-not-secure-so-far" class="headerlink" title="监听80端口(not secure so far)"></a>监听80端口(not secure so far)</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen      80 default_server;</span><br><span class="line">    listen [::]:80 default_server;</span><br><span class="line">    # blablabla</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="log文件"><a href="#log文件" class="headerlink" title="log文件"></a>log文件</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">server&#123;</span><br><span class="line">    # blablabla</span><br><span class="line">    access_log  &#x2F;var&#x2F;log&#x2F;nginx&#x2F;blog_access.log;</span><br><span class="line">    error_log   &#x2F;var&#x2F;log&#x2F;nginx&#x2F;blog_error.log;</span><br><span class="line">    error_page 404 &#x3D;  &#x2F;404.html;</span><br><span class="line">    # blablabla</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="网页配置文件-文本"><a href="#网页配置文件-文本" class="headerlink" title="网页配置文件(文本)"></a>网页配置文件(文本)</h5><p>优先响应文本(无需加载延迟)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    # blablabla</span><br><span class="line">    root &#x2F;var&#x2F;www&#x2F;blog;</span><br><span class="line"></span><br><span class="line">    # Add index.php to the list if you are using PHP</span><br><span class="line">    index index.html index.htm index.nginx-debian.html;</span><br><span class="line"></span><br><span class="line">    server_name ochicken.top www.ochicken.top;</span><br><span class="line">    # blablabla</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="网页配置文件-图片"><a href="#网页配置文件-图片" class="headerlink" title="网页配置文件(图片)"></a>网页配置文件(图片)</h5><p>然后响应图片</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">server&#123;</span><br><span class="line">    # blablabla</span><br><span class="line">    location ~* ^.+\.(ico|gif|jpg|jpeg|png)$ &#123;</span><br><span class="line">        root &#x2F;var&#x2F;www&#x2F;blog;</span><br><span class="line">        access_log   off;</span><br><span class="line">        expires      1d;</span><br><span class="line">    &#125;</span><br><span class="line">    # blablabla</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="网页配置文件-视频"><a href="#网页配置文件-视频" class="headerlink" title="网页配置文件(视频)"></a>网页配置文件(视频)</h5><p>最后响应视频</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    # blablabla</span><br><span class="line">    location ~* ^.+\.(css|js|txt|xml|swf|wav)$ &#123;</span><br><span class="line">        root &#x2F;var&#x2F;www&#x2F;blog;</span><br><span class="line">        access_log   off;</span><br><span class="line">        expires      10m;</span><br><span class="line">    &#125;</span><br><span class="line">    # blablabla</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="若有其他非文本-图片-视频格式的请求-中断"><a href="#若有其他非文本-图片-视频格式的请求-中断" class="headerlink" title="若有其他非文本/图片/视频格式的请求, 中断"></a>若有其他非文本/图片/视频格式的请求, 中断</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">server&#123;</span><br><span class="line">    location &#x2F; &#123;</span><br><span class="line">        root &#x2F;var&#x2F;www&#x2F;blog;</span><br><span class="line">        if (-f $request_filename) &#123;</span><br><span class="line">            rewrite ^&#x2F;(.*)$  &#x2F;$1 break;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    location &#x2F;nginx_status &#123;</span><br><span class="line">        stub_status on;</span><br><span class="line">        access_log off;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>要注意的是:  </p>
+<ol>
+<li>只要带<code>/var/www/html</code>字样的, 都把<code>html</code>改为<code>blog</code>;  </li>
+<li>原46行的<code>server_name _;</code>, 改为自己注册好的域名<code>server_name ochicken.top www.ochicken.top;</code>;<br>我把<code>default</code>保存在了<code>VPS_config/default_80</code>方便粘贴.</li>
+</ol>
+<p><strong>Remarks:</strong> 在讲到为网页添加证书的时候<code>/etc/nginx/sites-available/default</code>还会再用<code>VPS_config/default_443</code>修改. 添加证书往往是最后一步, 因为即使你不添加, 也是能打开网页的.  </p>
+<p>保存退出后,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">nginx -t               &#x2F;&#x2F;检查Nginx文件是否有语法错误, 无错的话应该弹出OK</span><br><span class="line">service nginx restart  &#x2F;&#x2F;重启nginx</span><br><span class="line">service nginx start    &#x2F;&#x2F;启动nginx</span><br><span class="line">service nginx enable   &#x2F;&#x2F;设置开机自动启动</span><br><span class="line">service nginx status   &#x2F;&#x2F;查看运行状态</span><br></pre></td></tr></table></figure>
+<h3 id="Simultaneously-Deploy"><a href="#Simultaneously-Deploy" class="headerlink" title="Simultaneously Deploy"></a>Simultaneously Deploy</h3><p>按照下面的设置可以同时发布在github.com和自建VPS上: 回到本地, 放Blog文件的那个目录, 在<code>_config.yml</code>末尾修改为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">- type: git</span><br><span class="line">  repo: git@github.com:OChicken&#x2F;OChicken.github.io.git</span><br><span class="line">  branch: master</span><br><span class="line">- type: git</span><br><span class="line">  repo: git@134.209.239.83:OChicken&#x2F;OChicken.DigitalOcean.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
+<p>注意 <strong>缩进</strong>! 配置好再<code>hexo g</code>和<code>hexo d</code>. 在浏览器里输入<a href="ochicken.top">ochicken.top</a>, 看看弹出了什么?<br>Ref: <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-deployer-git">hexojs/hexo-deployer-git: Git deployer plugin for Hexo.</a></p>
+<h1 id="为VPS安装SSL证书"><a href="#为VPS安装SSL证书" class="headerlink" title="为VPS安装SSL证书"></a>为VPS安装SSL证书</h1><p>仅仅是把东西publish到网页还不能满足我强迫症的小小心灵: connection is not secure. 但是我们总可以让它secure—安装证书. 可以把证书理解为把站点从not secure变为secure的一个放在服务器里的文档, 并不是什么特别高大上的东西.</p>
+<p>证书是由通信双方—站长我自己, 以及访问ochicken.top站点的各个访客—以外的第三方机构, 作为证书发布者, certificate authority, 简称 <strong>CA</strong>. 全世界有大大小小的CA.<br>面向个人建站的 <strong>CA证书</strong> 往往是免费的, 是谓免费型DV SSL. CA证书包括但不限于两个文件: 公钥, 私钥, 以及别的内容.<br>一个DV SSL证书生效的套路是:</p>
+<ol>
+<li>用指定的用于CA验证的程序包, openssl, 在服务器上生成一对公钥和私钥;</li>
+<li>把公钥和私钥上传到CA机构的网站, 等待申请成功;</li>
+<li>申请成功之时, 用户可以从CA机构网站上下载对应建站框架(Nginx, Apache2, …)的证书, 并部署到服务器上(也就是修改配置文件).</li>
+<li>申请成功之时, CA机构会把公钥广播到全世界的域名解析服务器, 当后者都收到这把公钥并加入解析列表的时候, 全世界的访客就都可以通过在浏览器里输入ochicken.top来安全地(https)访问博主的站点了.</li>
+</ol>
+<p>生成证书的前两步也可以直接在CA机构购买. 我就是在阿里云0元购的, 前面在讲域名的时候就顺便办了只是当时不知道怎么用. 「购买证书」蓝色按钮右边有一个「上传证书」白色按钮, 需要填写 <strong>证书名称</strong>, 上传 <strong>证书文件(pem编码)**和 **证书私钥(pem编码)</strong>, 证书文件对应公钥, 证书私钥顾名思义. 不同的CA机构有不同的上传格式的要求, 常见公钥后缀: pem, crt, key; 常见私钥后缀: pfx, p12, pem, key (<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_37049781/article/details/84837342">证书之间的转换（crt pem key） - 何惜戈 - CSDN博客</a>).</p>
+<h1 id="Domain-name-域名"><a href="#Domain-name-域名" class="headerlink" title="Domain name 域名"></a>Domain name 域名</h1><p>域名要自己买一个. 用英文单词拼接起来的就是域名. 不过后缀名, 即顶级域名, 各种各样都有, eg, gov, com, cn, org, edu, 甚至 .monster… 显然, 如果我用a指代不同的东西肯定会引起混淆, 因为a们都是放在全世界的网页上的, 你可以认为都是放在 int main(){}里面的变量. 因此为加以区分, 令 a_gov, a_edu, a_com, … 所以域名抢注是很常见的事情.  </p>
+<p>域名解析就是将<code>域名</code>映射到<code>ip地址</code>的操作. 地球上任意一个用户在ta的浏览器里输入域名 -&gt; 计算机寻找域名指定的<code>DNS服务器</code> -&gt; DNS服务器解析该域名对应的IP地址 -&gt; IP地址返回给用户的浏览器 -&gt; 用户浏览器紧接着把信息传递到地球上 IP地址 对应的服务器主机 -&gt; 与<code>Blog主</code>三次握手通信. 这么算下来, 来回共5次, 前2次是跟DNS服务器的交易. 过程如下  </p>
+<div align=center>
+    <img src="/2019/09/30/How-to-Build-a-Personal-Blog/DNS.jpg">
+    域名解析
+</div>
+
+<p>服务器在全世界有唯一ip地址. 服务器里面还会再分多几个ip地址. 面向世界的服务器是防止被登录的, 而像<code>192.168.77.14</code>就是自己的小主机可以随便登录.  </p>
+<p>本章将涉及域名的指向: 如何选用A记录还是CNAME记录. <a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/an-introduction-to-dns-terminology-components-and-concepts">An Introduction to DNS Terminology, Components, and Concepts | DigitalOcean</a>的CNAME Records一节能够初步帮助澄清概念.</p>
+<h2 id="购买域名和证书"><a href="#购买域名和证书" class="headerlink" title="购买域名和证书"></a>购买域名和证书</h2><p>按照<a target="_blank" rel="noopener" href="https://juejin.im/post/5a71a4f9518825733a3105ac">GitHub Pages自定义域名 - 掘金</a>, 要做5件事情:  </p>
+<ol>
+<li><p>配置 GitHub Page: OChicken.github.io. 前面搭博客已经是可以靠OChicken.github.io来发布网页的了;</p>
+</li>
+<li><p>「申请/购买」一个域名;<br>域名可以取为ochicken.top, ochicken.site, ochicken.monster(= =)等等 (如今顶级域名已经花样百出了). 我是用<a target="_blank" rel="noopener" href="https://cn.aliyun.com/">阿里云国内版</a>买的. <a target="_blank" rel="noopener" href="https://www.alibabacloud.com/">阿里云国际版</a>在知乎<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/41729674">2018年阿里云国际版注册教程与方法 - 知乎</a>有讲解申请方法. 除此之外, 周街都见的GoDaddy和flyzy小站推荐过的<a target="_blank" rel="noopener" href="https://www.namesilo.com/">NameSilo</a>也可以尝试: 因为涉及到第二年续(xu)费(ming)的情况, 褥老客户羊毛的情形是很常见的, 所以关注相关测评还是必要的…</p>
+</li>
+<li><p>Ali Cloud 上设置域名解析, 详情见下节 (实际上购买域名和设置域名解析是两件事, 阿里云把这两个一并解决了; 鹅厂的DNSPod也可以做);</p>
+</li>
+<li><p>购买证书, 证书可以把上述域名变成 secure 的. 阿里云的DNS在证书生效没多久就把相关信息记录到域名列表里了.</p>
+</li>
+</ol>
+<p>好了, 就这么简单.<br><strong>如何将证书跟域名和VPS绑定</strong>我们放到用VPS搭博客的那一章再讲, 因为我觉得这需要对VPS的Nginx配置文件有一定的理解.</p>
+<h2 id="域名解析-A记录还是CNAME记录"><a href="#域名解析-A记录还是CNAME记录" class="headerlink" title="域名解析: A记录还是CNAME记录?"></a>域名解析: A记录还是CNAME记录?</h2><p>先下结论:</p>
+<ol>
+<li><p>若项目托管在GitHub.com, 则采用CNAME记录, 指向 <strong>域名</strong>ochicken.github.io, 同时repo里要有<code>CNAME</code>文件, 内容为所购买的域名<code>ochicken.top</code>;</p>
+</li>
+<li><p>若项目托管在DigitalOcean.com的VPS, 则采用A记录, 指向 <strong>IP地址</strong>134.209.239.83.</p>
+</li>
+</ol>
+<p>Ref: <a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000018038675">GitHub Pages 自定义域名实践整理 - 自学之地 - SegmentFault 思否</a>, 有图会讲得比我清晰.</p>
+<p>为方便解释, 假设我已经在DigitalOcean买了一个服务器, IP地址为134.209.239.83.</p>
+<ol>
+<li>若项目托管在<code>ochicken.github.io</code>, 即主机为GitHub的主机 (<code>185.199.108~111.153</code>, 在荷兰的数据中心), 则<br>做  <code>A</code>  记录解析, 表明ochicken.top指向IP地址185.199.108~111.153. 然而这是行不通的. 因为一连4栋别墅185.199.108~111.153都是GitHub.com的主机, 「我」的账号虽然从中分了一个房间, 但是从外网看, 并不能得知「我」到底在哪个房间, 从而指向指定仓库<code>git@github.com:OChicken/</code>是不可能的.<br>做<code>CNAME</code>记录解析, 表明ochicken.top是指向ochicken.github.io的 <strong>快捷方式</strong>; ochicken.github.io并不是一个空壳域名, 它由更高级的CA保证, 默认指向主机<code>185.199.108~111.153</code>.<br>当然也可以给ochicken.github.io添加个<code>A</code>记录解析, 指向185.199.108~111.153的其中一个. 不过这个操作比较trivial. (<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/31377141/">github怎么绑定自己的域名？ - 知乎</a>)<br>经测试, 如果DNS只添加A record, 则在浏览器中输入ochicken.top将显示GitHub的404页面, 如下. 这表明ochicken.top的确是指向了GitHub的服务器, 但并没有检索到OChicken的仓库.<div align="center">
+ <img src="/2019/09/30/How-to-Build-a-Personal-Blog/A_record.png">
+ 如果只添加A record而不添加CNAME record的话. 这是GitHub.com的404页面.
+</div>
+
+</li>
+</ol>
+<p>可见, 在阿里云DNS只添加CNAME记录就可以将ochicken.top与OChicken.github.io绑定.</p>
+<ol start="2">
+<li>若项目托管在<code>134.209.239.83</code>,      即主机为DigitalOcean的一个VPS(我的为<code>134.209.239.83</code>), 则<br>做  <code>A</code>  记录解析, 表明ochicken.top指向IP地址134.209.239.83.<br>没法做<code>CNAME</code>记录解析, 因为要求ochicken.top指向某个非空壳的域名, 假设是ochicken.digitalocean.io, 但这个域名其实并不指向任何IP地址, 并不跟VPS主机134.209.239.83绑定, 是个空壳域名.</li>
+</ol>
+<h1 id="为VPS安装SSL证书-1"><a href="#为VPS安装SSL证书-1" class="headerlink" title="为VPS安装SSL证书"></a>为VPS安装SSL证书</h1><h2 id="各类CA以及对应的添加到服务器的方法-链接综述"><a href="#各类CA以及对应的添加到服务器的方法-链接综述" class="headerlink" title="各类CA以及对应的添加到服务器的方法(链接综述)"></a>各类CA以及对应的添加到服务器的方法(链接综述)</h2><p><a target="_blank" rel="noopener" href="https://cn.aliyun.com/">阿里云</a>的方案:<br>老客户了. 阿里云证书的公钥是pem(分两段, 第一段为服务器证书, 第二段为CA中间证书), 私钥是key.<br><a target="_blank" rel="noopener" href="https://help.aliyun.com/knowledge_detail/88447.html?spm=5176.13394938.0.0.45dd4b1anC2cQZ">阿里云帮助中心-阿里云，领先的云计算服务提供商</a></p>
+<h2 id="Nginx配置文件指向证书"><a href="#Nginx配置文件指向证书" class="headerlink" title="Nginx配置文件指向证书"></a>Nginx配置文件指向证书</h2><p>到阿里云上下载Nginx的证书即可, 命名为<code>2888440_ochicken.top_nginx.zip</code>. 我们所要做的, 就是把CA证书放到服务器里(随便放哪应该无所谓, 有放在<code>/etc</code>的, 也有放在<code>/etc/nginx</code>的), 并对<code>/etc/nginx/sites-available/default</code>稍作修改.<br>Ref: <a target="_blank" rel="noopener" href="https://www.playpi.org/2019030501.html">Nginx 配置 SSL 证书实现 HTTPS 访问 | 虾丸派</a></p>
+<h3 id="永久指向https-ochicken-top"><a href="#永久指向https-ochicken-top" class="headerlink" title="永久指向https://ochicken.top"></a>永久指向<code>https://ochicken.top</code></h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">server&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$host</span> = ochicken.top)&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">301</span> https:<span class="comment">//$host$request_uri;</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$host</span> = www.ochicken.top)&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">301</span> https:<span class="comment">//$host$request_uri;</span></span><br><span class="line">    &#125;</span><br><span class="line">    listen        <span class="number">80</span> ;</span><br><span class="line">    listen   [::]:<span class="number">80</span> ;</span><br><span class="line">    server_name ochicken.top www.ochicken.top;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">404</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen        80 ;</span><br><span class="line">    listen   [::]:80 ;</span><br><span class="line">    server_name ochicken.top www.ochicken.top;</span><br><span class="line"></span><br><span class="line">    access_log  &#x2F;var&#x2F;log&#x2F;nginx&#x2F;blog_access.log;</span><br><span class="line">    error_log   &#x2F;var&#x2F;log&#x2F;nginx&#x2F;blog_error.log;</span><br><span class="line">    error_page 404 &#x3D;  &#x2F;404.html;</span><br><span class="line"></span><br><span class="line">    rewrite ^&#x2F;(.*)$ https:&#x2F;&#x2F;ochicken.top&#x2F;$1 permanent;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意这里80端口并没有<code>default_server</code>—我们希望把<code>default_server</code>留给443端口.<br>把对80端口的监听独立为一个server block, 第二个server block是443端口的.</p>
+<h3 id="加入SSL证书"><a href="#加入SSL证书" class="headerlink" title="加入SSL证书"></a>加入SSL证书</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen        443 ssl default_server;</span><br><span class="line">    listen   [::]:443 ssl default_server;</span><br><span class="line"></span><br><span class="line">    # SSL configuration</span><br><span class="line">    ssl_certificate     &#x2F;etc&#x2F;nginx&#x2F;ssl&#x2F;2888440_ochicken.top.pem;</span><br><span class="line">    ssl_certificate_key &#x2F;etc&#x2F;nginx&#x2F;ssl&#x2F;2888440_ochicken.top.key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="其他网页配置内容"><a href="#其他网页配置内容" class="headerlink" title="其他网页配置内容"></a>其他网页配置内容</h3><p>跟前面的配置一样.</p>
+<p>我把<code>default</code>保存在了<code>VPS_config/default_443</code>方便粘贴. 保存退出后,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nginx -t               &#x2F;&#x2F;检查Nginx文件是否有语法错误, 无错的话应该弹出OK</span><br><span class="line">service nginx restart  &#x2F;&#x2F;重启nginx</span><br><span class="line">service nginx status   &#x2F;&#x2F;查看运行状态</span><br></pre></td></tr></table></figure>
+<p>然后就看到网页变为安全的了.<br></font></p>
+
+    </div>
+
+    
+    
+    
+        
+
+  <div class="followme">
+    <p>Welcome to my other publishing channels</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/images/wechat_channel.jpg">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/VPS/" rel="tag"># VPS</a>
+              <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/" rel="tag"># 服务器</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+              <a href="/tags/Personal-Blog/" rel="tag"># Personal Blog</a>
+              <a href="/tags/%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" rel="tag"># 个人博客</a>
+              <a href="/tags/GitHub-Pages/" rel="tag"># GitHub Pages</a>
+              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+              <a href="/tags/%E6%A0%91%E8%8E%93%E6%B4%BE/" rel="tag"># 树莓派</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/09/22/hello-world/" rel="prev" title="Hello World">
+      <i class="fa fa-chevron-left"></i> Hello World
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/11/Shadowsocks-libev/" rel="next" title="Shadowsocks-libev的Server和Client(for Linux)配置">
+      Shadowsocks-libev的Server和Client(for Linux)配置 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5%E5%8C%BA%E5%88%86"><span class="nav-number">1.</span> <span class="nav-text">概念区分</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%89%E6%8B%A9%E4%B8%80%E4%B8%AAVPS%E5%B9%B6%E7%94%A8shell%E7%99%BB%E5%BD%95"><span class="nav-number">2.</span> <span class="nav-text">选择一个VPS并用shell登录</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%90%AD%E5%8D%9A%E5%AE%A2"><span class="nav-number">3.</span> <span class="nav-text">搭博客</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8GitHub%E4%B8%8A%E6%90%AD%E5%8D%9A%E5%AE%A2-by-GitHub-Pages"><span class="nav-number">3.1.</span> <span class="nav-text">在GitHub上搭博客: by GitHub Pages</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%BA%91Linux%E4%B8%BB%E6%9C%BA%E4%B8%8A%E5%AE%89%E8%A3%85%E7%89%B9%E5%AE%9A%E7%9A%84%E5%8C%85%E5%9C%A8%E7%BA%BF%E7%BC%96%E8%BE%91"><span class="nav-number">3.2.</span> <span class="nav-text">在云Linux主机上安装特定的包在线编辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E7%BC%96%E8%BE%91%E5%8D%9A%E5%AE%A2%E7%84%B6%E5%90%8E%E5%90%8C%E6%AD%A5%E5%88%B0%E4%BA%91"><span class="nav-number">3.3.</span> <span class="nav-text">本地编辑博客然后同步到云</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8Bgit%E4%BB%93%E5%BA%93"><span class="nav-number">3.3.1.</span> <span class="nav-text">远程git仓库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85git%E5%8C%85%E5%B9%B6%E5%81%9A%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE"><span class="nav-number">3.3.1.1.</span> <span class="nav-text">安装git包并做全局配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BAgit%E7%94%A8%E6%88%B7%E5%B9%B6%E5%AE%9E%E7%8E%B0%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95"><span class="nav-number">3.3.1.2.</span> <span class="nav-text">创建git用户并实现免密登录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git%E7%94%A8%E6%88%B7%E7%9A%84%E6%9D%83%E9%99%90%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.3.1.3.</span> <span class="nav-text">git用户的权限设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E5%88%9B%E5%BB%BAOChicken-DigitalOcean-io%E7%9A%84git%E4%BB%93%E5%BA%93"><span class="nav-number">3.3.1.4.</span> <span class="nav-text">在服务器端创建OChicken.DigitalOcean.io的git仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E4%BB%93%E5%BA%93%E5%92%8C%E6%9C%AC%E5%9C%B0%E4%BB%93%E5%BA%93-Remarks"><span class="nav-number">3.3.1.5.</span> <span class="nav-text">服务器端仓库和本地仓库: Remarks</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E9%A1%B5%E7%AB%AFNginx-Let%E2%80%99s-open-to-the-world"><span class="nav-number">3.3.2.</span> <span class="nav-text">网页端Nginx: Let’s open to the world</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E9%A1%B5%E6%8E%A5%E5%8F%A3%E6%96%87%E4%BB%B6-var-www-blog"><span class="nav-number">3.3.2.1.</span> <span class="nav-text">网页接口文件: &#x2F;var&#x2F;www&#x2F;blog</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEgit-hooks-%E6%8C%87%E5%90%91-var-www-blog"><span class="nav-number">3.3.2.2.</span> <span class="nav-text">配置git hooks, 指向&#x2F;var&#x2F;www&#x2F;blog</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AENginx"><span class="nav-number">3.3.2.3.</span> <span class="nav-text">安装和配置Nginx</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9B%91%E5%90%AC80%E7%AB%AF%E5%8F%A3-not-secure-so-far"><span class="nav-number">3.3.2.3.1.</span> <span class="nav-text">监听80端口(not secure so far)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#log%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.2.3.2.</span> <span class="nav-text">log文件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-%E6%96%87%E6%9C%AC"><span class="nav-number">3.3.2.3.3.</span> <span class="nav-text">网页配置文件(文本)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-%E5%9B%BE%E7%89%87"><span class="nav-number">3.3.2.3.4.</span> <span class="nav-text">网页配置文件(图片)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-%E8%A7%86%E9%A2%91"><span class="nav-number">3.3.2.3.5.</span> <span class="nav-text">网页配置文件(视频)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%8B%A5%E6%9C%89%E5%85%B6%E4%BB%96%E9%9D%9E%E6%96%87%E6%9C%AC-%E5%9B%BE%E7%89%87-%E8%A7%86%E9%A2%91%E6%A0%BC%E5%BC%8F%E7%9A%84%E8%AF%B7%E6%B1%82-%E4%B8%AD%E6%96%AD"><span class="nav-number">3.3.2.3.6.</span> <span class="nav-text">若有其他非文本&#x2F;图片&#x2F;视频格式的请求, 中断</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Simultaneously-Deploy"><span class="nav-number">3.3.3.</span> <span class="nav-text">Simultaneously Deploy</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BAVPS%E5%AE%89%E8%A3%85SSL%E8%AF%81%E4%B9%A6"><span class="nav-number">4.</span> <span class="nav-text">为VPS安装SSL证书</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Domain-name-%E5%9F%9F%E5%90%8D"><span class="nav-number">5.</span> <span class="nav-text">Domain name 域名</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B4%AD%E4%B9%B0%E5%9F%9F%E5%90%8D%E5%92%8C%E8%AF%81%E4%B9%A6"><span class="nav-number">5.1.</span> <span class="nav-text">购买域名和证书</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90-A%E8%AE%B0%E5%BD%95%E8%BF%98%E6%98%AFCNAME%E8%AE%B0%E5%BD%95"><span class="nav-number">5.2.</span> <span class="nav-text">域名解析: A记录还是CNAME记录?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BAVPS%E5%AE%89%E8%A3%85SSL%E8%AF%81%E4%B9%A6-1"><span class="nav-number">6.</span> <span class="nav-text">为VPS安装SSL证书</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E7%B1%BBCA%E4%BB%A5%E5%8F%8A%E5%AF%B9%E5%BA%94%E7%9A%84%E6%B7%BB%E5%8A%A0%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E6%96%B9%E6%B3%95-%E9%93%BE%E6%8E%A5%E7%BB%BC%E8%BF%B0"><span class="nav-number">6.1.</span> <span class="nav-text">各类CA以及对应的添加到服务器的方法(链接综述)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nginx%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%8C%87%E5%90%91%E8%AF%81%E4%B9%A6"><span class="nav-number">6.2.</span> <span class="nav-text">Nginx配置文件指向证书</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B0%B8%E4%B9%85%E6%8C%87%E5%90%91https-ochicken-top"><span class="nav-number">6.2.1.</span> <span class="nav-text">永久指向https:&#x2F;&#x2F;ochicken.top</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E5%85%A5SSL%E8%AF%81%E4%B9%A6"><span class="nav-number">6.2.2.</span> <span class="nav-text">加入SSL证书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE%E5%86%85%E5%AE%B9"><span class="nav-number">6.2.3.</span> <span class="nav-text">其他网页配置内容</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Shouran Ma"
+      src="/images/Cola.png">
+  <p class="site-author-name" itemprop="name">Shouran Ma</p>
+  <div class="site-description" itemprop="description">RWTH Physiker <br> 半职业码农</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">16</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/OChicken" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;OChicken" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:shouran.ma@rwth-aachen.de" title="E-Mail → mailto:shouran.ma@rwth-aachen.de" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Shouran Ma</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
